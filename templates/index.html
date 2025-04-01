@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary bg-opacity-25">
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-balance-scale me-2"></i>
+                    Legal Text Analysis
+                </h1>
+            </div>
+            <div class="card-body">
+                <p class="lead">Paste a legal clause or terms of service to get a simple explanation and risk assessment.</p>
+                
+                <form action="{{ url_for('analyze') }}" method="post" id="legal-form">
+                    <div class="mb-3">
+                        <textarea class="form-control" id="legal_text" name="legal_text" rows="8" 
+                            placeholder="Paste legal text here (e.g., contract clause, terms of service, privacy policy, etc.)" 
+                            required>{{ legal_text if legal_text else '' }}</textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Explanation style:</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="audience" id="layperson" value="layperson" 
+                                {{ 'checked' if not audience or audience == 'layperson' else '' }}>
+                            <label class="form-check-label" for="layperson">
+                                <i class="fas fa-user me-1"></i> Simple explanation (for non-lawyers)
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="audience" id="law_student" value="law_student"
+                                {{ 'checked' if audience == 'law_student' else '' }}>
+                            <label class="form-check-label" for="law_student">
+                                <i class="fas fa-graduation-cap me-1"></i> Technical explanation (for law students/professionals)
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary" id="analyze-btn">
+                            <i class="fas fa-search me-2"></i>Analyze Text
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {% if analysis %}
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-success bg-opacity-25">
+                <h2 class="h4 mb-0">
+                    <i class="fas fa-file-alt me-2"></i>
+                    Analysis Results
+                </h2>
+            </div>
+            <div class="card-body">
+                <div class="mb-4">
+                    <h3 class="h5"><i class="fas fa-book-open me-2"></i>Explanation</h3>
+                    <div class="p-3 bg-dark bg-opacity-25 rounded">
+                        {{ analysis.explanation | safe }}
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <h3 class="h5"><i class="fas fa-exclamation-triangle me-2"></i>Potential Risks</h3>
+                    <div class="p-3 bg-warning bg-opacity-10 rounded">
+                        {{ analysis.risks | safe }}
+                    </div>
+                </div>
+                
+                {% if audience == 'law_student' and analysis.legal_principles %}
+                <div class="mb-4">
+                    <h3 class="h5"><i class="fas fa-gavel me-2"></i>Relevant Legal Principles</h3>
+                    <div class="p-3 bg-info bg-opacity-10 rounded">
+                        {{ analysis.legal_principles | safe }}
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if audience != 'law_student' and analysis.concern_level is defined %}
+                <div class="mb-4">
+                    <h3 class="h5"><i class="fas fa-chart-line me-2"></i>Concern Level</h3>
+                    <div class="p-3 bg-info bg-opacity-10 rounded">
+                        <div class="concern-meter">
+                            {% for i in range(1, 6) %}
+                                {% if i <= analysis.concern_level %}
+                                <i class="fas fa-circle text-danger"></i>
+                                {% else %}
+                                <i class="far fa-circle text-muted"></i>
+                                {% endif %}
+                            {% endfor %}
+                            <span class="ms-2">
+                                {% if analysis.concern_level == 1 %}
+                                Very Low Concern
+                                {% elif analysis.concern_level == 2 %}
+                                Low Concern
+                                {% elif analysis.concern_level == 3 %}
+                                Moderate Concern
+                                {% elif analysis.concern_level == 4 %}
+                                High Concern
+                                {% elif analysis.concern_level == 5 %}
+                                Very High Concern
+                                {% else %}
+                                No Concern Rating
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="alert alert-secondary mt-3">
+                    <small><i class="fas fa-info-circle me-1"></i> Disclaimer: This analysis is generated by AI and should not be considered legal advice. For legal matters, consult with a qualified attorney.</small>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-body text-center p-4">
+                <i class="fas fa-search fa-3x text-primary mb-3"></i>
+                <h3 class="h5">Easy Analysis</h3>
+                <p>Copy and paste legal text to get instant explanations in plain language.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-body text-center p-4">
+                <i class="fas fa-shield-alt fa-3x text-primary mb-3"></i>
+                <h3 class="h5">Risk Identification</h3>
+                <p>Uncover potential legal risks and concerns in contracts and terms.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-body text-center p-4">
+                <i class="fas fa-users fa-3x text-primary mb-3"></i>
+                <h3 class="h5">For Everyone</h3>
+                <p>Choose between simple explanations or technical legal analysis.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
